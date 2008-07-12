@@ -86,15 +86,45 @@ describe Thor::Util do
 
   describe ".constants_in_contents" do
     it "returns an array of names of constants defined in the string" do
-      list = Thor::Util.constants_in_contents("FOO = 12; Bar = {}; class Baz; end")
+      list = Thor::Util.constants_in_contents("FOO = 13; Bar = {}; class Baz; class Boo; end; end; class Baz::Bam; end")
       list.must include("FOO")
       list.must include("Bar")
       list.must include("Baz")
+      list.must include("Baz::Bam")
+      list.must include("Baz::Boo")
     end
 
     it "doesn't put the newly-defined constants in the enclosing namespace" do
       Thor::Util.constants_in_contents("class Blat; end")
       defined?(Blat).must_not be
     end
+
+    describe  ".get_constants_for" do
+      it "returns top level constants" do
+        class Foo
+          class Baz; end
+        end
+        Thor::Util.get_constants_for("Foo").must include("Baz")
+      end
+      it "returns second and further level constants" do
+        class Foo
+          class Baz
+            class Bar
+              class Bam
+                class Boo;end
+                class Bor;end
+              end
+              class Bat;end
+            end
+          end
+        end
+        Thor::Util.get_constants_for("Foo").must include("Baz::Bar")
+        Thor::Util.get_constants_for("Foo").must include("Baz::Bar::Bam")
+        Thor::Util.get_constants_for("Foo").must include("Baz::Bar::Bat")
+        Thor::Util.get_constants_for("Foo").must include("Baz::Bar::Bam::Boo")
+        Thor::Util.get_constants_for("Foo").must include("Baz::Bar::Bam::Bor")
+      end
+    end
+
   end
 end

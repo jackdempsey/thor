@@ -2,7 +2,7 @@ $TESTING=true
 $:.push File.join(File.dirname(__FILE__), '..', 'lib')
 
 require 'stringio'
-
+require 'spec'
 module Spec::Expectations::ObjectExpectations
   alias_method :must, :should
   alias_method :must_not, :should_not

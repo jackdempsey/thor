@@ -25,8 +25,15 @@ class Thor
       klasses = self.constants.dup
       eval(str)
       ret = self.constants - klasses
-      ret.each {|k| self.send(:remove_const, k)}
-      ret
+      foo = []
+      ret.each do |k|
+        nested_constants = get_constants_for(k)
+        if nested_constants && !nested_constants.empty?
+          foo << nested_constants.map {|x| "#{k}::#{x}"}
+        end
+        self.send(:remove_const, k)
+      end
+      (ret + foo).flatten
     end
 
     def self.make_constant(str)
@@ -38,6 +45,26 @@ class Thor
       str.gsub(/\B[A-Z]/, '_\&').squeeze('_') =~ /_*(.*)/
       return $+.downcase
     end  
-    
+
+    def self.get_constants_for(klass)
+      # the line below is close to make_constant. However that assumes constants defined in Object
+      # so it misses whats eval'ed and subsequently defined inside Thor::Util in constants_in_contents
+      klass_constant =  klass.split("::").inject(self) {|obj, x| obj.const_get(x)}
+
+      # line below is needed as sometimes klass_constant would come back as 13 instead of FOO
+      return unless klass_constant.is_a? Class
+
+      top_level_constants = klass_constant.constants
+      return if top_level_constants.empty?
+      ret = []
+      top_level_constants.each do |const|
+        klass_name = "#{klass}::#{const}"
+        if (children = get_constants_for(klass_name) )
+          ret << children.map {|child| "#{const}::#{child}"}
+        end
+      end
+      (top_level_constants + ret).flatten
+    end
+
   end
 end
