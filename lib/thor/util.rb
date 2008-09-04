@@ -47,6 +47,10 @@ class Thor
     end  
 
     def self.get_constants_for(klass)
+      # weird infinite loop without line below
+      # comment out to see TaskHash go wild
+      return if klass	=~ /Merb/
+
       # the line below is close to make_constant. However that assumes constants defined in Object
       # so it misses whats eval'ed and subsequently defined inside Thor::Util in constants_in_contents
       klass_constant =  klass.split("::").inject(self) {|obj, x| obj.const_get(x)}
