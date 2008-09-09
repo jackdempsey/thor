@@ -47,13 +47,12 @@ class Thor
     end  
 
     def self.get_constants_for(klass)
-      # weird infinite loop without line below
-      # comment out to see TaskHash go wild
-      return if klass	=~ /Task|Runner|Hash/
+      klass_parts = klass.split("::")
+      return [] if recursing(klass_parts)
 
       # the line below is close to make_constant. However that assumes constants defined in Object
       # so it misses whats eval'ed and subsequently defined inside Thor::Util in constants_in_contents
-      klass_constant =  klass.split("::").inject(self) {|obj, x| obj.const_get(x)}
+      klass_constant =  klass_parts.inject(self) {|obj, x| obj.const_get(x)}
 
       # line below is needed as sometimes klass_constant would come back as 13 instead of FOO
       return unless klass_constant.is_a? Class
@@ -70,5 +69,10 @@ class Thor
       (top_level_constants + ret).flatten
     end
 
+    private
+
+    def self.recursing(parts)
+      parts[-2] == parts[-1] or (parts[-4] == parts[-1]) or (parts[-3] == parts[-1])
+    end
   end
 end

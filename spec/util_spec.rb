@@ -126,5 +126,16 @@ describe Thor::Util do
       end
     end
 
+    it "reads a typical thor file correctly" do
+      contents = <<-'EOT'
+          class Merb < Thor
+            desc 'foo', 'Find foo'
+            def foo
+            end
+          end
+      EOT
+      Thor::Util.constants_in_contents(contents).must_not raise_error(SystemStackError)
+    end
+
   end
 end
